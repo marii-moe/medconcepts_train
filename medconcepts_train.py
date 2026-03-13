@@ -113,7 +113,7 @@ def load_environment(
     
     # load only the sample subset, should contain dev and test
     sample_ds = load_dataset("sameedkhan/medconceptsqa-sample_medarc_2k", subset)
-    sample_test = ds["test"]
+    sample_test = sample_ds["test"]
 
     # load the entire dataset, should contain dev and test
     if(subset is 'all'):
