@@ -134,8 +134,8 @@ def load_environment(
         test = ds["test"]
 
     # Remove any examples the sample subset that are in the test set to avoid data leakage in evaluation
-    sample_test_ids = set(sample_test["id"])
-    test = test.filter(lambda example: example["id"] not in sample_test_ids)
+    sample_test_ids = set(sample_test["question_id"])
+    test = test.filter(lambda example: example["question_id"] not in sample_test_ids)
 
     # normalize answer_format
     answer_format = AnswerFormat(answer_format) if isinstance(answer_format, str) else answer_format
