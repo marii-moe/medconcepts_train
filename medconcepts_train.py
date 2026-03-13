@@ -256,7 +256,7 @@ def load_environment(
     rubric = vf.Rubric(funcs=[accuracy], weights=[1.0], parser=parser)
 
     return vf.SingleTurnEnv(
-        eval_dataset=mapped,
+        dataset=mapped,
         rubric=rubric,
         system_prompt=system_prompt,
         parser=parser,
