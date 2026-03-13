@@ -14,8 +14,8 @@ dependencies = [
 ]
 
 [tool.prime.environment]
-loader = "medconceptsqa:load_environment"
-display_name = "MedConcepts QA"
+loader = "medconcepts_train:load_environment"
+display_name = "MedConcepts QA Train set"
 visibility = "PUBLIC"
 
 [build-system]
