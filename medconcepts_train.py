@@ -102,11 +102,12 @@ def load_environment(
         vf.Environment: the single-turn evaluation environment
     """
     ICD10CM = "icd10cm"
-    level = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
+    
 
     if difficulty is "all":
         subset = "all"
     else:
+        level = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
         subset = f"{ICD10CM}_{level.value}"
 
     
