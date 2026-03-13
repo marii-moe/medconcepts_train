@@ -113,12 +113,12 @@ def load_dataset_by_vocab_and_difficulty(
     vocab = Vocab(vocab) if isinstance(vocab, str) else vocab
     if difficulty != 'all':
         difficulty = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
-        return load_dataset("ofir408/MedConceptsQA", f'{vocab}_{difficulty}')
+        return load_dataset("ofir408/MedConceptsQA", f'{vocab.value}_{difficulty.value}')
     else:
         # Load all three difficulty levels and concatenate their test splits
-        ds_easy = load_dataset("ofir408/MedConceptsQA", f'{vocab}_easy')
-        ds_medium = load_dataset("ofir408/MedConceptsQA", f'{vocab}_medium')
-        ds_hard = load_dataset("ofir408/MedConceptsQA", f'{vocab}_hard')
+        ds_easy = load_dataset("ofir408/MedConceptsQA", f'{vocab.value}_easy')
+        ds_medium = load_dataset("ofir408/MedConceptsQA", f'{vocab.value}_medium')
+        ds_hard = load_dataset("ofir408/MedConceptsQA", f'{vocab.value}_hard')
         ds_dev = concatenate_datasets([ds_easy["dev"], ds_medium["dev"], ds_hard["dev"]])
         ds_test = concatenate_datasets([ds_easy["test"], ds_medium["test"], ds_hard["test"]])
         # Create a new Datasets object with the concatenated dev and test splits
