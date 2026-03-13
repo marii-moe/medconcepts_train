@@ -111,8 +111,8 @@ def load_dataset_by_vocab_and_difficulty(
 ) -> vf.Environment:
     """Convenience function for loading a specific vocab and difficulty level"""
     vocab = Vocab(vocab) if isinstance(vocab, str) else vocab
-    difficulty = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
     if difficulty != 'all':
+        difficulty = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
         return load_dataset("ofir408/MedConceptsQA", f'{vocab}_{difficulty}')
     else:
         # Load all three difficulty levels and concatenate their test splits
