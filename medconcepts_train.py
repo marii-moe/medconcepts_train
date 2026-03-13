@@ -104,7 +104,7 @@ def load_environment(
     ICD10CM = "icd10cm"
     
 
-    if difficulty is "all":
+    if difficulty == "all":
         subset = "all"
     else:
         level = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
@@ -116,7 +116,7 @@ def load_environment(
     sample_test = sample_ds["test"]
 
     # load the entire dataset, should contain dev and test
-    if(subset is 'all'):
+    if(subset == 'all'):
         # Load all three difficulty levels and concatenate their test splits
         ds_easy = load_dataset("ofir408/MedConceptsQA", "icd10cm_easy")
         ds_medium = load_dataset("ofir408/MedConceptsQA", "icd10cm_medium")

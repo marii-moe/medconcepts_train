@@ -1,6 +1,6 @@
 # medconcepts-train
 
-> Replace the placeholders below, then remove this callout.
+> This is a medconcepts training set created by filtering the original medconcepts dataset to exclude the medarcs sample. Only meant for 1 experiment. 
 
 ### Overview
 - **Environment ID**: `medconcepts-train`
