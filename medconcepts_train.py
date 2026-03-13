@@ -12,6 +12,15 @@ from verifiers.utils.data_utils import BOXED_SYSTEM_PROMPT, THINK_BOXED_SYSTEM_P
 
 disable_progress_bar()  # suppress datasets mapping progress bar
 
+class Vocab(str, Enum):
+    ATC = "atc"
+    ICD10CM = "icd10cm"
+    ICD10PROC = "icd10proc"
+    ICD9CM = "icd9cm"
+    ICD9PROC = "icd9proc"
+    ALL_EXCEPT_ICD10CM = "all_except_icd10cm"  # all vocabs except icd10cm, which is the most represented in the dataset
+    ALL = "all"
+
 class Difficulty(str, Enum):
     EASY = "easy"
     MEDIUM = "medium"
@@ -76,10 +85,81 @@ def _create_few_shot_data(few_shot_set: Dataset, num_few_shot: int, answer_forma
 
     return few_shot_examples
 
+def load_icd10cm(
+    difficulty: Difficulty | str = 'all',
+) -> vf.Environment:
+    """Convenience function for loading the ICD10CM subset with eval data removed"""
+    sample_ds = load_dataset("sameedkhan/medconceptsqa-sample_medarc_2k", difficulty)
+    sample_test = sample_ds["test"]
+    ds = sample_ds
+    # load the entire dataset, should contain dev and test
+    ds = load_dataset_by_vocab_and_difficulty(Vocab.ICD10CM, difficulty=difficulty)
+    ds_dev,ds_test = ds["dev"], ds["test"]
+
+    # Remove any examples the sample subset that are in the test set to avoid data leakage in evaluation
+    sample_test_ids = set(sample_test["question_id"])
+    ds_test = ds_test.filter(lambda example: example["question_id"] not in sample_test_ids)
+    return DatasetDict({
+        "dev": ds_dev,
+        "test": ds_test
+    })
+
+
+def load_dataset_by_vocab_and_difficulty(
+    vocab: Vocab | str,
+    difficulty: Difficulty | str = 'all',
+) -> vf.Environment:
+    """Convenience function for loading a specific vocab and difficulty level"""
+    vocab = Vocab(vocab) if isinstance(vocab, str) else vocab
+    difficulty = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
+    if difficulty != 'all':
+        return load_dataset("ofir408/MedConceptsQA", f'{vocab}_{difficulty}')
+    else:
+        # Load all three difficulty levels and concatenate their test splits
+        ds_easy = load_dataset("ofir408/MedConceptsQA", f'{vocab}_easy')
+        ds_medium = load_dataset("ofir408/MedConceptsQA", f'{vocab}_medium')
+        ds_hard = load_dataset("ofir408/MedConceptsQA", f'{vocab}_hard')
+        ds_dev = concatenate_datasets([ds_easy["dev"], ds_medium["dev"], ds_hard["dev"]])
+        ds_test = concatenate_datasets([ds_easy["test"], ds_medium["test"], ds_hard["test"]])
+        # Create a new Datasets object with the concatenated dev and test splits
+        return DatasetDict({
+            "dev": ds_dev,
+            "test": ds_test
+        })
+
+def load_all_except_icd10cm(
+    difficulty: Difficulty | str = 'all',
+) -> vf.Environment:
+    """Convenience function for loading all vocabs except ICD10CM with eval data removed"""
+    # load the entire dataset, should contain dev and test
+    ds_atc = load_dataset_by_vocab_and_difficulty(Vocab.ATC, difficulty)
+    ds_icd9cm = load_dataset_by_vocab_and_difficulty(Vocab.ICD9CM, difficulty)
+    ds_icd9proc = load_dataset_by_vocab_and_difficulty(Vocab.ICD9PROC, difficulty)
+    ds_icd10proc = load_dataset_by_vocab_and_difficulty(Vocab.ICD10PROC, difficulty)
+    ds_dev = concatenate_datasets([ds_atc["dev"], ds_icd9cm["dev"], ds_icd9proc["dev"], ds_icd10proc["dev"]])
+    ds_test = concatenate_datasets([ds_atc["test"], ds_icd9cm["test"], ds_icd9proc["test"], ds_icd10proc["test"]])
+    return DatasetDict({
+        "dev": ds_dev,
+        "test": ds_test
+    })
+
+def load_full_dataset(
+    difficulty: Difficulty | str = 'all',
+) -> vf.Environment:
+    """Convenience function for loading the full dataset with eval data removed"""
+    ds_icd10cm = load_icd10cm(difficulty=difficulty)
+    ds_all_except_icd10cm = load_all_except_icd10cm(difficulty=difficulty)
+    ds_dev = concatenate_datasets([ds_icd10cm["dev"], ds_all_except_icd10cm["dev"]])
+    ds_test = concatenate_datasets([ds_icd10cm["test"], ds_all_except_icd10cm["test"]])
+    return DatasetDict({
+        "dev": ds_dev,
+        "test": ds_test
+    })
 
 def load_environment(
     num_few_shot: int = 4,
     use_think: bool = False,
+    vocab: Vocab | str = Vocab.ICD10CM,
     difficulty: Difficulty | str = 'all',
     shuffle_answers: bool = False,
     shuffle_seed: int | None = 1618,
@@ -94,6 +174,7 @@ def load_environment(
     Args:
         num_few_shot: number of few-shot examples to include in the prompt (default: 4)
         use_think: whether to use a ThinkParser and reasoning system prompt (default: False)
+        vocab: vocabulary to subset dataset (default: icd10cm)
         difficulty: difficulty level to subset dataset (used in conjunction with vocab).(default: easy)
         shuffle_answers: whether to shuffle the answer choices (default: False)
         shuffle_seed: deterministic seed forwarded to the shuffler (default: 1618)
@@ -101,41 +182,13 @@ def load_environment(
     Returns:
         vf.Environment: the single-turn evaluation environment
     """
-    ICD10CM = "icd10cm"
-    
-
-    if difficulty == "all":
-        subset = "all"
+    if vocab == Vocab.ALL:
+        ds = load_full_dataset(difficulty=difficulty)
+    elif vocab == Vocab.ALL_EXCEPT_ICD10CM:
+        ds = load_all_except_icd10cm(difficulty=difficulty)
     else:
-        level = Difficulty(difficulty) if isinstance(difficulty, str) else difficulty
-        subset = f"{ICD10CM}_{level.value}"
-
-    
-    # load only the sample subset, should contain dev and test
-    sample_ds = load_dataset("sameedkhan/medconceptsqa-sample_medarc_2k", subset)
-    sample_test = sample_ds["test"]
-
-    # load the entire dataset, should contain dev and test
-    if(subset == 'all'):
-        # Load all three difficulty levels and concatenate their test splits
-        ds_easy = load_dataset("ofir408/MedConceptsQA", "icd10cm_easy")
-        ds_medium = load_dataset("ofir408/MedConceptsQA", "icd10cm_medium")
-        ds_hard = load_dataset("ofir408/MedConceptsQA", "icd10cm_hard")
-        ds_dev = concatenate_datasets([ds_easy["dev"], ds_medium["dev"], ds_hard["dev"]])
-        ds_test = concatenate_datasets([ds_easy["test"], ds_medium["test"], ds_hard["test"]])
-        # Create a new Datasets object with the concatenated dev and test splits
-        ds = DatasetDict({
-            "dev": ds_dev,
-            "test": ds_test
-        })
-        test = ds["test"]
-    else:
-        ds = load_dataset("ofir408/MedConceptsQA", subset)
-        test = ds["test"]
-
-    # Remove any examples the sample subset that are in the test set to avoid data leakage in evaluation
-    sample_test_ids = set(sample_test["question_id"])
-    test = test.filter(lambda example: example["question_id"] not in sample_test_ids)
+        ds = load_dataset_by_vocab_and_difficulty(vocab, difficulty=difficulty)
+    test = ds["test"]
 
     # normalize answer_format
     answer_format = AnswerFormat(answer_format) if isinstance(answer_format, str) else answer_format
@@ -203,7 +256,7 @@ def load_environment(
     rubric = vf.Rubric(funcs=[accuracy], weights=[1.0], parser=parser)
 
     return vf.SingleTurnEnv(
-        dataset=mapped,
+        eval_dataset=mapped,
         rubric=rubric,
         system_prompt=system_prompt,
         parser=parser,
