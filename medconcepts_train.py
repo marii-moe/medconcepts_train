@@ -193,7 +193,7 @@ def load_environment(
         ds = load_dataset_by_vocab_and_difficulty(vocab, difficulty=difficulty)
     test = ds["test"]
 
-    task = f"medconcets_train_{vocab.value}_{difficulty}" if difficulty != 'all' else f"medconcets_train_{vocab.value}"
+    task = f"medconcepts_train_{vocab.value}_{difficulty}" if difficulty != 'all' else f"medconcepts_train_{vocab.value}"
 
     # normalize answer_format
     answer_format = AnswerFormat(answer_format) if isinstance(answer_format, str) else answer_format

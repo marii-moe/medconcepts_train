@@ -1,20 +1,21 @@
 from medconcepts_train import load_environment
 import verifiers as vf
 
-env_id = 'medconcepts_train'
+env_ids = ["maziyar/OpenMed_ICD10", "medconcepts_train"]
 
-env = vf.load_environment(env_id)
+envs = [vf.load_environment(env_ids[0]), vf.load_environment(env_ids[1])]
 
-print(env)
+names = ["openmed-icd10", "medconcepts_train"]
+
 
 train_env_group = vf.EnvGroup(
-    envs=[env],
-    env_names=[env_id],
+    envs=envs,
+    env_names=names,
     map_kwargs=dict(writer_batch_size=1),  # set defensively to not error on map operations on large datasets
 )
 
 train_dataset = train_env_group.get_dataset()
 
 for row in train_dataset.select(range(5)):
-    print(row)
+    print(row['task'])
     print()
