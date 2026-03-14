@@ -19,3 +19,9 @@ train_dataset = train_env_group.get_dataset()
 for row in train_dataset.select(range(5)):
     print(row['task'])
     print()
+
+print(set(train_dataset["task"]))
+
+print(set(names))
+
+assert set(train_dataset["task"]) == set(names)

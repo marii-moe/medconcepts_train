@@ -234,12 +234,17 @@ def load_environment(
 
         return {"question": full_question, "answer": answer, "info": info, "task": task}
 
-    load_from_cache_file = False if shuffle_answers else True
+    def _batch_map(batch: dict[str, list], idxs: list[int]) -> dict[str, list]:
+        keys = batch.keys()
+        row_with_keys = lambda row: {key: row[key] for key in keys}
+        mapped_rows = [_map(row_with_keys(row), idx) for row, idx in zip(batch.values(), idxs)]
+        return {key: [row[key] for row in mapped_rows] for key in mapped_rows[0].keys()}
+
     mapped = test.map(
-        _map,
+        _batch_map,
         with_indices=True,
         remove_columns=test.column_names,
-        load_from_cache_file=load_from_cache_file,
+        load_from_cache_file=not shuffle_answers,
     )
 
     if answer_format == AnswerFormat.XML:
