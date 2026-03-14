@@ -1,11 +1,11 @@
 from medconcepts_train import load_environment
 import verifiers as vf
 
-env_ids = ["maziyar/OpenMed_ICD10", "medconcepts_train"]
+env_ids = ["maziyar/OpenMed_ICD10", "marii/medconcepts_train"]
 
 envs = [vf.load_environment(env_ids[0]), vf.load_environment(env_ids[1])]
 
-names = ["openmed-icd10", "medconcepts_train"]
+names = ["openmed-icd10", "medconcepts_train_whut"]
 
 
 train_env_group = vf.EnvGroup(
