@@ -182,6 +182,7 @@ def load_environment(
     Returns:
         vf.Environment: the single-turn evaluation environment
     """
+    vocab = Vocab(vocab) if isinstance(vocab, str) else vocab
     if vocab == Vocab.ALL:
         ds = load_full_dataset(difficulty=difficulty)
     elif vocab == Vocab.ALL_EXCEPT_ICD10CM:
@@ -191,6 +192,8 @@ def load_environment(
     else:
         ds = load_dataset_by_vocab_and_difficulty(vocab, difficulty=difficulty)
     test = ds["test"]
+
+    task = f"medconcets_train_{vocab.value}_{difficulty}" if difficulty != 'all' else f"medconcets_train_{vocab.value}"
 
     # normalize answer_format
     answer_format = AnswerFormat(answer_format) if isinstance(answer_format, str) else answer_format
@@ -229,7 +232,7 @@ def load_environment(
         if shuffle_answers:
             info["options"] = options
 
-        return {"question": full_question, "answer": answer, "info": info}
+        return {"question": full_question, "answer": answer, "info": info, "task": task}
 
     load_from_cache_file = False if shuffle_answers else True
     mapped = test.map(
@@ -258,7 +261,7 @@ def load_environment(
     rubric = vf.Rubric(funcs=[accuracy], weights=[1.0], parser=parser)
 
     return vf.SingleTurnEnv(
-        dataset=mapped,
+        eval_dataset=mapped,
         rubric=rubric,
         system_prompt=system_prompt,
         parser=parser,
