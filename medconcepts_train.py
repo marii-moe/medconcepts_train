@@ -186,6 +186,8 @@ def load_environment(
         ds = load_full_dataset(difficulty=difficulty)
     elif vocab == Vocab.ALL_EXCEPT_ICD10CM:
         ds = load_all_except_icd10cm(difficulty=difficulty)
+    elif vocab == Vocab.ICD10CM:
+        ds = load_icd10cm(difficulty=difficulty)
     else:
         ds = load_dataset_by_vocab_and_difficulty(vocab, difficulty=difficulty)
     test = ds["test"]
