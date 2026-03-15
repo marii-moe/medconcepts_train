@@ -9,6 +9,8 @@ from medarc_verifiers.rewards.multiple_choice_accuracy import multiple_choice_ac
 from medarc_verifiers.utils.randomize_multiple_choice import randomize_multiple_choice
 from verifiers.utils.data_utils import BOXED_SYSTEM_PROMPT, THINK_BOXED_SYSTEM_PROMPT, extract_boxed_answer
 
+import sys
+
 
 disable_progress_bar()  # suppress datasets mapping progress bar
 
@@ -266,12 +268,12 @@ def load_environment(
 
     rubric = vf.Rubric(funcs=[accuracy], weights=[1.0], parser=parser)
 
-    print("""Loaded MedConceptsQA environment with the following configuration:""")
-    print(f"  - Vocab: {vocab.value}")
-    print(f"  - Difficulty: {difficulty}")
-    print(f"  - Answer Format: {answer_format}")
-    print(f"  - Few-Shot Examples: {num_few_shot}")
-    print(f"  - Length of dataset: {len(mapped)}")
+    print("""Loaded MedConceptsQA environment with the following configuration:""", file=sys.stderr)
+    print(f"  - Vocab: {vocab.value}", file=sys.stderr)
+    print(f"  - Difficulty: {difficulty}", file=sys.stderr)
+    print(f"  - Answer Format: {answer_format}", file=sys.stderr)
+    print(f"  - Few-Shot Examples: {num_few_shot}", file=sys.stderr)
+    print(f"  - Length of dataset: {len(mapped)}", file=sys.stderr)
 
     return vf.SingleTurnEnv(
         dataset=mapped,
