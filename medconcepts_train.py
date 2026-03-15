@@ -266,6 +266,13 @@ def load_environment(
 
     rubric = vf.Rubric(funcs=[accuracy], weights=[1.0], parser=parser)
 
+    print("""Loaded MedConceptsQA environment with the following configuration:""")
+    print(f"  - Vocab: {vocab.value}")
+    print(f"  - Difficulty: {difficulty}")
+    print(f"  - Answer Format: {answer_format}")
+    print(f"  - Few-Shot Examples: {num_few_shot}")
+    print(f"  - Length of dataset: {len(mapped)}")
+
     return vf.SingleTurnEnv(
         dataset=mapped,
         rubric=rubric,
